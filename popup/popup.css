@@ -60,9 +60,11 @@ h1 {
 }
 
 .toggle-label {
-  font-size: 11px;
+  font-size: 13px;
   color: #1a1a1a;
   font-weight: 500;
+  cursor: pointer;
+  user-select: none;
 }
 
 #countdown-label {
@@ -216,7 +218,7 @@ input:checked ~ #specific-label {
 }
 
 .specific-time-header {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: #1a1a1a;
   margin-bottom: 8px;
@@ -241,10 +243,11 @@ input:checked ~ #specific-label {
 }
 
 #time-input {
-  flex: 1;
+  flex: 0 1 auto;
+  width: 60px;
   border: none;
   outline: none;
-  font-size: 11px;
+  font-size: 14px;
   color: #1a1a1a;
   background: transparent;
 }
@@ -257,6 +260,31 @@ input:checked ~ #specific-label {
   font-size: 10px;
   cursor: pointer;
   outline: none;
+  margin-left: auto;
+}
+
+/* Quick Time Buttons */
+.quick-time-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.quick-time-button {
+  padding: 6px 12px;
+  border: 1px solid #1e40af;
+  background-color: white;
+  color: #1a1a1a;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.quick-time-button:hover {
+  background-color: #eff6ff;
 }
 
 /* Buttons */
@@ -330,4 +358,5 @@ input:checked ~ #specific-label {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 500;
+  white-space: nowrap;
 }

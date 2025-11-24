@@ -45,19 +45,88 @@ function setDefaultEndTime() {
     }
   }
 
-  // Set the time input value (24-hour format)
-  const timeString = `${String(targetHours).padStart(2, '0')}:${String(targetMinutes).padStart(2, '0')}`;
-  timeInput.value = timeString;
-
-  // Set AM/PM
+  // Set AM/PM dropdown
   if (targetHours >= 12) {
     ampmSelect.value = 'PM';
   } else {
     ampmSelect.value = 'AM';
   }
+
+  // Convert to 12-hour format for display
+  let displayHours = targetHours % 12;
+  if (displayHours === 0) displayHours = 12;
+
+  // Set the time input value in 12-hour format
+  const timeString = `${String(displayHours).padStart(2, '0')}:${String(targetMinutes).padStart(2, '0')}`;
+  timeInput.value = timeString;
 }
 
 setDefaultEndTime();
+
+// Calculate and populate quick time buttons
+function populateQuickTimeButtons() {
+  const now = new Date();
+  const quickTimeButtons = document.querySelectorAll('.quick-time-button');
+  const quickTimes = [];
+
+  // Add 10 minutes to current time as starting point
+  const tenMinutesLater = new Date(now.getTime() + 10 * 60 * 1000);
+  let targetMinutes = tenMinutesLater.getMinutes();
+  let targetHours = tenMinutesLater.getHours();
+
+  // Round up to nearest 15-minute interval
+  const remainder = targetMinutes % 15;
+  if (remainder !== 0) {
+    targetMinutes = targetMinutes + (15 - remainder);
+    if (targetMinutes >= 60) {
+      targetMinutes = 0;
+      targetHours = (targetHours + 1) % 24;
+    }
+  }
+
+  // Generate next 3 15-minute intervals
+  for (let i = 0; i < 3; i++) {
+    const time = new Date();
+    time.setHours(targetHours, targetMinutes, 0, 0);
+
+    quickTimes.push({
+      hours24: targetHours,
+      minutes: targetMinutes,
+      display: formatTime12Hour(targetHours, targetMinutes)
+    });
+
+    // Add 15 minutes for next interval
+    targetMinutes += 15;
+    if (targetMinutes >= 60) {
+      targetMinutes = 0;
+      targetHours = (targetHours + 1) % 24;
+    }
+  }
+
+  // Set button text and click handlers
+  quickTimeButtons.forEach((button, index) => {
+    button.textContent = quickTimes[index].display;
+    button.addEventListener('click', () => {
+      const selectedTime = quickTimes[index];
+
+      // Set AM/PM dropdown
+      if (selectedTime.hours24 >= 12) {
+        ampmSelect.value = 'PM';
+      } else {
+        ampmSelect.value = 'AM';
+      }
+
+      // Convert to 12-hour format for time input
+      let displayHours = selectedTime.hours24 % 12;
+      if (displayHours === 0) displayHours = 12;
+
+      const timeString = `${String(displayHours).padStart(2, '0')}:${String(selectedTime.minutes).padStart(2, '0')}`;
+      timeInput.value = timeString;
+    });
+  });
+}
+
+populateQuickTimeButtons();
 
 // View switching functions
 function showSetupView() {
@@ -71,19 +140,36 @@ function showCountdownView() {
 }
 
 // Toggle between countdown and specific time mode
-timerModeToggle.addEventListener('change', () => {
+function switchTimerMode() {
   if (timerModeToggle.checked) {
     // Switch to specific time mode
     countdownLabel.style.color = '#1a1a1a';
-    specificLabel.style.color = '#4285f4';
+    specificLabel.style.color = '#1e40af';
     countdownMode.style.display = 'none';
     specificTimeMode.style.display = 'block';
   } else {
     // Switch to countdown mode
-    countdownLabel.style.color = '#4285f4';
+    countdownLabel.style.color = '#1e40af';
     specificLabel.style.color = '#1a1a1a';
     countdownMode.style.display = 'block';
     specificTimeMode.style.display = 'none';
+  }
+}
+
+timerModeToggle.addEventListener('change', switchTimerMode);
+
+// Make labels clickable
+countdownLabel.addEventListener('click', () => {
+  if (timerModeToggle.checked) {
+    timerModeToggle.checked = false;
+    switchTimerMode();
+  }
+});
+
+specificLabel.addEventListener('click', () => {
+  if (!timerModeToggle.checked) {
+    timerModeToggle.checked = true;
+    switchTimerMode();
   }
 });
 

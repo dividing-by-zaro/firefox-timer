@@ -64,11 +64,16 @@
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
-            <input type="time" id="time-input">
+            <input type="text" id="time-input" placeholder="12:00" pattern="[0-9]{1,2}:[0-9]{2}">
             <select id="ampm-select">
               <option value="AM">AM</option>
               <option value="PM">PM</option>
             </select>
+          </div>
+          <div class="quick-time-buttons">
+            <button class="quick-time-button" data-index="0"></button>
+            <button class="quick-time-button" data-index="1"></button>
+            <button class="quick-time-button" data-index="2"></button>
           </div>
         </div>
 
@@ -83,11 +88,11 @@
       <div class="content-area">
         <div class="countdown-display">
           <div class="countdown-time" id="countdown-time">00:15:00</div>
-          <div class="countdown-label">Time Remaining</div>
+          <div class="countdown-label">Before Tab Closes</div>
         </div>
 
         <div class="button-container">
-          <button id="reset-button" class="secondary-button">Clear / Reset</button>
+          <button id="reset-button" class="secondary-button">Reset</button>
         </div>
       </div>
     </div>
