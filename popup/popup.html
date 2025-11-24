@@ -17,84 +17,82 @@
       </div>
     </div>
 
-    <!-- Timer Setup View -->
-    <div id="timer-setup-view">
-      <div class="toggle-container">
-        <span class="toggle-label" id="countdown-label">Countdown</span>
-        <label class="switch">
-          <input type="checkbox" id="timer-mode-toggle">
-          <span class="slider round"></span>
-        </label>
-        <span class="toggle-label" id="specific-label">End Time</span>
+    <!-- Toggle (visible during setup) -->
+    <div class="toggle-container" id="toggle-container">
+      <span class="toggle-label" id="countdown-label">Countdown</span>
+      <label class="switch">
+        <input type="checkbox" id="timer-mode-toggle">
+        <span class="slider round"></span>
+      </label>
+      <span class="toggle-label" id="specific-label">End Time</span>
+    </div>
+
+    <!-- Timer header (visible during active countdown) -->
+    <div class="timer-header" id="timer-header" style="display: none;">
+      <span class="timer-header-text">Tab closes in:</span>
+    </div>
+
+    <!-- Content Area (center content changes) -->
+    <div class="content-area">
+      <!-- Countdown Mode -->
+      <div id="countdown-mode">
+        <div class="time-picker">
+          <div class="time-segment">
+            <button class="increment-btn" data-segment="hours">&uarr;</button>
+            <div class="time-value" id="hours-value">00</div>
+            <button class="decrement-btn" data-segment="hours">&darr;</button>
+          </div>
+          <span class="time-separator">:</span>
+          <div class="time-segment">
+            <button class="increment-btn" data-segment="minutes">&uarr;</button>
+            <div class="time-value" id="minutes-value">15</div>
+            <button class="decrement-btn" data-segment="minutes">&darr;</button>
+          </div>
+          <span class="time-separator">:</span>
+          <div class="time-segment">
+            <button class="increment-btn" data-segment="seconds">&uarr;</button>
+            <div class="time-value" id="seconds-value">00</div>
+            <button class="decrement-btn" data-segment="seconds">&darr;</button>
+          </div>
+        </div>
+
+        <div class="quick-buttons">
+          <button class="quick-button" data-minutes="5">5m</button>
+          <button class="quick-button" data-minutes="10">10m</button>
+          <button class="quick-button" data-minutes="15">15m</button>
+        </div>
       </div>
 
-      <div class="content-area">
-        <div id="countdown-mode">
-          <div class="time-picker">
-            <div class="time-segment">
-              <button class="increment-btn" data-segment="hours">&uarr;</button>
-              <div class="time-value" id="hours-value">00</div>
-              <button class="decrement-btn" data-segment="hours">&darr;</button>
-            </div>
-            <span class="time-separator">:</span>
-            <div class="time-segment">
-              <button class="increment-btn" data-segment="minutes">&uarr;</button>
-              <div class="time-value" id="minutes-value">15</div>
-              <button class="decrement-btn" data-segment="minutes">&darr;</button>
-            </div>
-            <span class="time-separator">:</span>
-            <div class="time-segment">
-              <button class="increment-btn" data-segment="seconds">&uarr;</button>
-              <div class="time-value" id="seconds-value">00</div>
-              <button class="decrement-btn" data-segment="seconds">&darr;</button>
-            </div>
-          </div>
-
-          <div class="quick-buttons">
-            <button class="quick-button" data-minutes="5">5m</button>
-            <button class="quick-button" data-minutes="10">10m</button>
-            <button class="quick-button" data-minutes="15">15m</button>
-          </div>
+      <!-- End Time Mode -->
+      <div id="specific-time-mode" style="display: none;">
+        <div class="specific-time-header">Set End Time</div>
+        <div class="time-input-container">
+          <svg class="clock-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <input type="text" id="time-input" placeholder="12:00" pattern="[0-9]{1,2}:[0-9]{2}">
+          <select id="ampm-select">
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
         </div>
-
-        <div id="specific-time-mode" style="display: none;">
-          <div class="specific-time-header">Set End Time</div>
-          <div class="time-input-container">
-            <svg class="clock-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <input type="text" id="time-input" placeholder="12:00" pattern="[0-9]{1,2}:[0-9]{2}">
-            <select id="ampm-select">
-              <option value="AM">AM</option>
-              <option value="PM">PM</option>
-            </select>
-          </div>
-          <div class="quick-time-buttons">
-            <button class="quick-time-button" data-index="0"></button>
-            <button class="quick-time-button" data-index="1"></button>
-            <button class="quick-time-button" data-index="2"></button>
-          </div>
+        <div class="quick-time-buttons">
+          <button class="quick-time-button" data-index="0"></button>
+          <button class="quick-time-button" data-index="1"></button>
+          <button class="quick-time-button" data-index="2"></button>
         </div>
+      </div>
 
-        <div class="button-container">
-          <button id="start-button" class="primary-button">Start Timer</button>
-        </div>
+      <!-- Active Countdown Display -->
+      <div id="countdown-display" style="display: none;">
+        <div class="countdown-time" id="countdown-time">00:15:00</div>
       </div>
     </div>
 
-    <!-- Timer Countdown View -->
-    <div id="timer-countdown-view" style="display: none;">
-      <div class="content-area">
-        <div class="countdown-display">
-          <div class="countdown-time" id="countdown-time">00:15:00</div>
-          <div class="countdown-label">Before Tab Closes</div>
-        </div>
-
-        <div class="button-container">
-          <button id="reset-button" class="secondary-button">Reset</button>
-        </div>
-      </div>
+    <!-- Button Container (always visible, button changes) -->
+    <div class="button-container">
+      <button id="main-button" class="primary-button">Start Timer</button>
     </div>
   </div>
   <script src="popup.js"></script>

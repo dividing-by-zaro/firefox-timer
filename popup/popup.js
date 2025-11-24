@@ -1,25 +1,28 @@
 // DOM Elements
-const timerSetupView = document.getElementById('timer-setup-view');
-const timerCountdownView = document.getElementById('timer-countdown-view');
 const timerModeToggle = document.getElementById('timer-mode-toggle');
 const countdownLabel = document.getElementById('countdown-label');
 const specificLabel = document.getElementById('specific-label');
 const countdownMode = document.getElementById('countdown-mode');
 const specificTimeMode = document.getElementById('specific-time-mode');
+const countdownDisplay = document.getElementById('countdown-display');
 const hoursValue = document.getElementById('hours-value');
 const minutesValue = document.getElementById('minutes-value');
 const secondsValue = document.getElementById('seconds-value');
 const timeInput = document.getElementById('time-input');
 const ampmSelect = document.getElementById('ampm-select');
 const quickButtons = document.querySelectorAll('.quick-button');
-const startButton = document.getElementById('start-button');
-const resetButton = document.getElementById('reset-button');
+const mainButton = document.getElementById('main-button');
 const countdownTime = document.getElementById('countdown-time');
+const toggleContainer = document.getElementById('toggle-container');
+const timerHeader = document.getElementById('timer-header');
 
 // Time values for countdown mode
 let hours = 0;
 let minutes = 15;
 let seconds = 0;
+
+// Timer state
+let isTimerActive = false;
 
 // Initialize display
 updateTimeDisplay();
@@ -129,14 +132,37 @@ function populateQuickTimeButtons() {
 populateQuickTimeButtons();
 
 // View switching functions
-function showSetupView() {
-  timerSetupView.style.display = 'block';
-  timerCountdownView.style.display = 'none';
+function showSetupMode() {
+  isTimerActive = false;
+  toggleContainer.style.display = 'flex';
+  timerHeader.style.display = 'none';
+  countdownDisplay.style.display = 'none';
+
+  // Show appropriate setup mode based on toggle
+  if (timerModeToggle.checked) {
+    countdownMode.style.display = 'none';
+    specificTimeMode.style.display = 'block';
+  } else {
+    countdownMode.style.display = 'block';
+    specificTimeMode.style.display = 'none';
+  }
+
+  // Update button
+  mainButton.textContent = 'Start Timer';
+  mainButton.className = 'primary-button';
 }
 
-function showCountdownView() {
-  timerSetupView.style.display = 'none';
-  timerCountdownView.style.display = 'block';
+function showActiveTimer() {
+  isTimerActive = true;
+  toggleContainer.style.display = 'none';
+  timerHeader.style.display = 'flex';
+  countdownMode.style.display = 'none';
+  specificTimeMode.style.display = 'none';
+  countdownDisplay.style.display = 'flex';
+
+  // Update button
+  mainButton.textContent = 'Reset';
+  mainButton.className = 'secondary-button';
 }
 
 // Toggle between countdown and specific time mode
@@ -235,112 +261,113 @@ quickButtons.forEach(button => {
   });
 });
 
-// Start button
-startButton.addEventListener('click', () => {
-  let timerInfo = {
-    mode: timerModeToggle.checked ? 'specificTime' : 'countdown'
-  };
-
-  if (timerInfo.mode === 'countdown') {
-    // Calculate total seconds
-    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-
-    if (totalSeconds === 0) {
-      alert('Please set a time greater than 0.');
-      return;
-    }
-
-    timerInfo.duration = totalSeconds * 1000; // Convert to milliseconds
-
-    // Send to background script
-    browser.runtime.sendMessage({ command: 'start', timerInfo })
-      .then(response => {
-        if (response && response.success) {
-          // Switch to countdown view
-          showCountdownView();
-          // Initialize countdown display
-          updateCountdownDisplay(timerInfo.duration);
-        }
+// Main button (Start/Reset)
+mainButton.addEventListener('click', () => {
+  if (isTimerActive) {
+    // Reset button clicked
+    browser.runtime.sendMessage({ command: 'reset' })
+      .then(() => {
+        // Reset countdown timer to default
+        hours = 0;
+        minutes = 15;
+        seconds = 0;
+        updateTimeDisplay();
+        // Switch back to setup view
+        showSetupMode();
       })
       .catch(error => {
-        console.error('Error starting timer:', error);
-        alert('Error starting timer.');
+        console.error('Error resetting timer:', error);
       });
   } else {
-    // Specific time mode
-    const timeValue = timeInput.value;
-    const ampm = ampmSelect.value;
+    // Start button clicked
+    let timerInfo = {
+      mode: timerModeToggle.checked ? 'specificTime' : 'countdown'
+    };
 
-    if (!timeValue) {
-      alert('Please select a time.');
-      return;
+    if (timerInfo.mode === 'countdown') {
+      // Calculate total seconds
+      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+      if (totalSeconds === 0) {
+        alert('Please set a time greater than 0.');
+        return;
+      }
+
+      timerInfo.duration = totalSeconds * 1000; // Convert to milliseconds
+
+      // Send to background script
+      browser.runtime.sendMessage({ command: 'start', timerInfo })
+        .then(response => {
+          if (response && response.success) {
+            // Switch to countdown view
+            showActiveTimer();
+            // Initialize countdown display
+            updateCountdownDisplay(timerInfo.duration);
+          }
+        })
+        .catch(error => {
+          console.error('Error starting timer:', error);
+          alert('Error starting timer.');
+        });
+    } else {
+      // Specific time mode
+      const timeValue = timeInput.value;
+      const ampm = ampmSelect.value;
+
+      if (!timeValue) {
+        alert('Please select a time.');
+        return;
+      }
+
+      // Parse the time
+      const [hoursStr, minutesStr] = timeValue.split(':');
+      let targetHours = parseInt(hoursStr, 10);
+      const targetMinutes = parseInt(minutesStr, 10);
+
+      // Convert to 24-hour format
+      if (ampm === 'PM' && targetHours !== 12) {
+        targetHours += 12;
+      } else if (ampm === 'AM' && targetHours === 12) {
+        targetHours = 0;
+      }
+
+      // Create target date
+      const now = new Date();
+      const targetDate = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        targetHours,
+        targetMinutes,
+        0
+      );
+
+      // If target time is in the past, set it for tomorrow
+      if (targetDate <= now) {
+        targetDate.setDate(targetDate.getDate() + 1);
+      }
+
+      const duration = targetDate.getTime() - now.getTime();
+
+      timerInfo.targetTime = targetDate.getTime();
+      timerInfo.duration = duration;
+
+      // Send to background script
+      browser.runtime.sendMessage({ command: 'start', timerInfo })
+        .then(response => {
+          if (response && response.success) {
+            // Switch to countdown view
+            showActiveTimer();
+            // Initialize countdown display
+            updateCountdownDisplay(duration);
+          }
+        })
+        .catch(error => {
+          console.error('Error starting timer:', error);
+          alert('Error starting timer.');
+        });
     }
-
-    // Parse the time
-    const [hoursStr, minutesStr] = timeValue.split(':');
-    let targetHours = parseInt(hoursStr, 10);
-    const targetMinutes = parseInt(minutesStr, 10);
-
-    // Convert to 24-hour format
-    if (ampm === 'PM' && targetHours !== 12) {
-      targetHours += 12;
-    } else if (ampm === 'AM' && targetHours === 12) {
-      targetHours = 0;
-    }
-
-    // Create target date
-    const now = new Date();
-    const targetDate = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      targetHours,
-      targetMinutes,
-      0
-    );
-
-    // If target time is in the past, set it for tomorrow
-    if (targetDate <= now) {
-      targetDate.setDate(targetDate.getDate() + 1);
-    }
-
-    const duration = targetDate.getTime() - now.getTime();
-
-    timerInfo.targetTime = targetDate.getTime();
-    timerInfo.duration = duration;
-
-    // Send to background script
-    browser.runtime.sendMessage({ command: 'start', timerInfo })
-      .then(response => {
-        if (response && response.success) {
-          // Switch to countdown view
-          showCountdownView();
-          // Initialize countdown display
-          updateCountdownDisplay(duration);
-        }
-      })
-      .catch(error => {
-        console.error('Error starting timer:', error);
-        alert('Error starting timer.');
-      });
   }
-});
-
-// Reset button
-resetButton.addEventListener('click', () => {
-  browser.runtime.sendMessage({ command: 'reset' })
-    .then(() => {
-      // Reset countdown timer to default
-      hours = 0;
-      minutes = 15;
-      seconds = 0;
-      updateTimeDisplay();
-      // Switch back to setup view
-      showSetupView();
-    })
-    .catch(error => {
-      console.error('Error resetting timer:', error);
-    });
 });
 
 // Helper functions
@@ -383,7 +410,7 @@ browser.runtime.onMessage.addListener((message) => {
     }
   } else if (message.command === 'timerComplete') {
     // Timer completed, switch back to setup view
-    showSetupView();
+    showSetupMode();
   }
 });
 
@@ -392,14 +419,14 @@ browser.runtime.sendMessage({ command: 'getTimerState' })
   .then(response => {
     if (response && response.active && response.timeRemaining > 0) {
       // Timer is active, show countdown view
-      showCountdownView();
+      showActiveTimer();
       updateCountdownDisplay(response.timeRemaining);
     } else {
       // No active timer, show setup view
-      showSetupView();
+      showSetupMode();
     }
   })
   .catch(error => {
     console.error('Error getting timer state:', error);
-    showSetupView();
+    showSetupMode();
   });
