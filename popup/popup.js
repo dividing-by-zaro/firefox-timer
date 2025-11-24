@@ -1,4 +1,6 @@
 // DOM Elements
+const timerSetupView = document.getElementById('timer-setup-view');
+const timerCountdownView = document.getElementById('timer-countdown-view');
 const timerModeToggle = document.getElementById('timer-mode-toggle');
 const countdownLabel = document.getElementById('countdown-label');
 const specificLabel = document.getElementById('specific-label');
@@ -12,7 +14,7 @@ const ampmSelect = document.getElementById('ampm-select');
 const quickButtons = document.querySelectorAll('.quick-button');
 const startButton = document.getElementById('start-button');
 const resetButton = document.getElementById('reset-button');
-const statusText = document.getElementById('status-text');
+const countdownTime = document.getElementById('countdown-time');
 
 // Time values for countdown mode
 let hours = 0;
@@ -21,6 +23,17 @@ let seconds = 0;
 
 // Initialize display
 updateTimeDisplay();
+
+// View switching functions
+function showSetupView() {
+  timerSetupView.style.display = 'block';
+  timerCountdownView.style.display = 'none';
+}
+
+function showCountdownView() {
+  timerSetupView.style.display = 'none';
+  timerCountdownView.style.display = 'block';
+}
 
 // Toggle between countdown and specific time mode
 timerModeToggle.addEventListener('change', () => {
@@ -112,7 +125,7 @@ startButton.addEventListener('click', () => {
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
     if (totalSeconds === 0) {
-      updateStatus('Please set a time greater than 0.');
+      alert('Please set a time greater than 0.');
       return;
     }
 
@@ -122,13 +135,15 @@ startButton.addEventListener('click', () => {
     browser.runtime.sendMessage({ command: 'start', timerInfo })
       .then(response => {
         if (response && response.success) {
-          const endTime = new Date(Date.now() + timerInfo.duration);
-          updateStatus(`Timer set to close tab at ${formatTime(endTime)}.`);
+          // Switch to countdown view
+          showCountdownView();
+          // Initialize countdown display
+          updateCountdownDisplay(timerInfo.duration);
         }
       })
       .catch(error => {
         console.error('Error starting timer:', error);
-        updateStatus('Error starting timer.');
+        alert('Error starting timer.');
       });
   } else {
     // Specific time mode
@@ -136,7 +151,7 @@ startButton.addEventListener('click', () => {
     const ampm = ampmSelect.value;
 
     if (!timeValue) {
-      updateStatus('Please select a time.');
+      alert('Please select a time.');
       return;
     }
 
@@ -177,12 +192,15 @@ startButton.addEventListener('click', () => {
     browser.runtime.sendMessage({ command: 'start', timerInfo })
       .then(response => {
         if (response && response.success) {
-          updateStatus(`Timer set for ${formatTime12Hour(targetHours, targetMinutes)}.`);
+          // Switch to countdown view
+          showCountdownView();
+          // Initialize countdown display
+          updateCountdownDisplay(duration);
         }
       })
       .catch(error => {
         console.error('Error starting timer:', error);
-        updateStatus('Error starting timer.');
+        alert('Error starting timer.');
       });
   }
 });
@@ -196,7 +214,8 @@ resetButton.addEventListener('click', () => {
       minutes = 15;
       seconds = 0;
       updateTimeDisplay();
-      updateStatus('No active timer. Tab remains open.');
+      // Switch back to setup view
+      showSetupView();
     })
     .catch(error => {
       console.error('Error resetting timer:', error);
@@ -204,8 +223,18 @@ resetButton.addEventListener('click', () => {
 });
 
 // Helper functions
-function updateStatus(message) {
-  statusText.textContent = `Status: ${message}`;
+function updateCountdownDisplay(timeRemaining) {
+  if (timeRemaining !== undefined && timeRemaining !== null && timeRemaining > 0) {
+    const totalSeconds = Math.max(0, Math.floor(timeRemaining / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    countdownTime.textContent = timeStr;
+  } else {
+    countdownTime.textContent = '00:00:00';
+  }
 }
 
 function formatTime(date) {
@@ -228,19 +257,12 @@ function formatTime12Hour(hours24, minutes) {
 browser.runtime.onMessage.addListener((message) => {
   if (message.command === 'updateStatus') {
     if (message.timeRemaining !== undefined && message.timeRemaining !== null && message.timeRemaining > 0) {
-      // Format time remaining as countdown
-      const totalSeconds = Math.max(0, Math.floor(message.timeRemaining / 1000));
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-
-      const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      updateStatus(`Timer active: ${timeStr} remaining.`);
-    } else if (message.status) {
-      updateStatus(message.status);
+      // Update countdown display
+      updateCountdownDisplay(message.timeRemaining);
     }
   } else if (message.command === 'timerComplete') {
-    updateStatus('Timer completed. Tab closed.');
+    // Timer completed, switch back to setup view
+    showSetupView();
   }
 });
 
@@ -248,17 +270,15 @@ browser.runtime.onMessage.addListener((message) => {
 browser.runtime.sendMessage({ command: 'getTimerState' })
   .then(response => {
     if (response && response.active && response.timeRemaining > 0) {
-      // Format time remaining as countdown
-      const totalSeconds = Math.floor(response.timeRemaining / 1000);
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-
-      const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      const endTime = new Date(response.endTime);
-      updateStatus(`Timer active: ${timeStr} remaining. Closes at ${formatTime(endTime)}.`);
+      // Timer is active, show countdown view
+      showCountdownView();
+      updateCountdownDisplay(response.timeRemaining);
+    } else {
+      // No active timer, show setup view
+      showSetupView();
     }
   })
   .catch(error => {
     console.error('Error getting timer state:', error);
+    showSetupView();
   });
