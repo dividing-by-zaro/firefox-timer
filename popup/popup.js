@@ -24,6 +24,41 @@ let seconds = 0;
 // Initialize display
 updateTimeDisplay();
 
+// Set default end time to nearest 15-minute interval at least 10 minutes away
+function setDefaultEndTime() {
+  const now = new Date();
+  const currentMinutes = now.getMinutes();
+  const currentHours = now.getHours();
+
+  // Add 10 minutes to current time
+  const tenMinutesLater = new Date(now.getTime() + 10 * 60 * 1000);
+  let targetMinutes = tenMinutesLater.getMinutes();
+  let targetHours = tenMinutesLater.getHours();
+
+  // Round up to nearest 15-minute interval
+  const remainder = targetMinutes % 15;
+  if (remainder !== 0) {
+    targetMinutes = targetMinutes + (15 - remainder);
+    if (targetMinutes >= 60) {
+      targetMinutes = 0;
+      targetHours = (targetHours + 1) % 24;
+    }
+  }
+
+  // Set the time input value (24-hour format)
+  const timeString = `${String(targetHours).padStart(2, '0')}:${String(targetMinutes).padStart(2, '0')}`;
+  timeInput.value = timeString;
+
+  // Set AM/PM
+  if (targetHours >= 12) {
+    ampmSelect.value = 'PM';
+  } else {
+    ampmSelect.value = 'AM';
+  }
+}
+
+setDefaultEndTime();
+
 // View switching functions
 function showSetupView() {
   timerSetupView.style.display = 'block';

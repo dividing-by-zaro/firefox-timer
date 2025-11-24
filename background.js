@@ -160,7 +160,7 @@ async function handleTimerComplete() {
         await browser.notifications.create({
           type: 'basic',
           iconUrl: browser.runtime.getURL('assets/icon-48.png'),
-          title: 'Tab Closer Timer',
+          title: 'Tab Timer',
           message: "Time's up! Closing tab."
         });
       } catch (e) {

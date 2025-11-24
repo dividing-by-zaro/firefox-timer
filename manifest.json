@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Tab Closer Timer",
+  "name": "Tab Timer",
   "version": "1.0.0",
   "description": "Set a timer to automatically close the current tab. Choose between countdown or specific end time.",
   "permissions": [
@@ -11,7 +11,7 @@
   ],
   "browser_action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Tab Closer Timer",
+    "default_title": "Tab Timer",
     "default_icon": {
       "48": "assets/icon-48.png"
     }
