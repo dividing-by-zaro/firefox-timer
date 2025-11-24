@@ -167,18 +167,35 @@ function showActiveTimer() {
 
 // Toggle between countdown and specific time mode
 function switchTimerMode() {
+  const contentArea = document.querySelector('.content-area');
+  const slider = document.querySelector('.slider');
+  const mainBtn = document.getElementById('main-button');
+  const quickTimeButtons = document.querySelectorAll('.quick-time-button');
+
   if (timerModeToggle.checked) {
-    // Switch to specific time mode
+    // Switch to specific time mode (green theme)
     countdownLabel.style.color = '#1a1a1a';
-    specificLabel.style.color = '#1e40af';
+    specificLabel.style.color = '#15803d';
     countdownMode.style.display = 'none';
     specificTimeMode.style.display = 'block';
+
+    // Apply green theme
+    contentArea.classList.add('green-theme');
+    slider.classList.add('green-theme');
+    mainBtn.classList.add('green-theme');
+    quickTimeButtons.forEach(btn => btn.classList.add('green-theme'));
   } else {
-    // Switch to countdown mode
+    // Switch to countdown mode (purple theme)
     countdownLabel.style.color = '#1e40af';
     specificLabel.style.color = '#1a1a1a';
     countdownMode.style.display = 'block';
     specificTimeMode.style.display = 'none';
+
+    // Remove green theme
+    contentArea.classList.remove('green-theme');
+    slider.classList.remove('green-theme');
+    mainBtn.classList.remove('green-theme');
+    quickTimeButtons.forEach(btn => btn.classList.remove('green-theme'));
   }
 }
 
